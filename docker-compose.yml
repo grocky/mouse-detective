@@ -7,3 +7,7 @@ services:
       - MB_OBJECTBOX_ANNOTATION_TOOL=true
     ports:
       - "8083:8080"
+    volumes:
+      - objectboxdata:/boxdata
+volumes:
+  objectboxdata:
