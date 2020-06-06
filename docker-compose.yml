@@ -1,0 +1,9 @@
+version: '3'
+services:
+  objectbox1:
+    image: machinebox/objectbox
+    environment:
+      - MB_KEY=${MB_KEY}
+      - MB_OBJECTBOX_ANNOTATION_TOOL=true
+    ports:
+      - "8083:8080"
