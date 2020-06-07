@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path"
 	"strconv"
 	"sync"
 
@@ -109,7 +110,8 @@ func checker(done <-chan struct{}, frames <-chan frame, results chan<- result) {
 
 func main() {
 
-	filename := "record/20200605/03/53.mp4"
+	filename := "record/20200605/03/53.mp4" // TODO:grocky convert to flag
+	outputDir := "rendered-frames"          // TODO:grocky convert to flag
 
 	// done channel for cancellation
 	done := make(chan struct{})
@@ -147,7 +149,7 @@ func main() {
 		}
 		log.Printf("Mouse detected! frame: %d, detectors: %v\n", r.frame, r.detectors)
 
-		frameFile := strconv.Itoa(r.frame) + ".jpg"
+		frameFile := path.Join(outputDir, filename+"-"+strconv.Itoa(r.frame)+".jpg")
 		f, err := os.Create(frameFile)
 		if err != nil {
 			log.Fatalf("Failed to create frame image: %v", err)
