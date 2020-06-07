@@ -3,14 +3,19 @@ package main
 import (
 	"bytes"
 	"errors"
+	"image/color"
+	"image/jpeg"
 	"io"
 	"log"
 	"os"
 	"path"
 	"strconv"
+	"strings"
 	"sync"
 
+	"github.com/fogleman/gg"
 	"github.com/machinebox/sdk-go/objectbox"
+
 	"gocv.io/x/gocv"
 )
 
@@ -149,13 +154,39 @@ func main() {
 		}
 		log.Printf("Mouse detected! frame: %d, detectors: %v\n", r.frame, r.detectors)
 
-		frameFile := path.Join(outputDir, filename+"-"+strconv.Itoa(r.frame)+".jpg")
+		image, err := jpeg.Decode(r.file)
+		if err != nil {
+			log.Printf("Unable to decode image: %v", err)
+			continue
+		}
+
+		imgCtx := gg.NewContextForImage(image)
+		green := color.RGBA{0, 100, 0, 255}
+		imgCtx.SetColor(color.Transparent)
+		imgCtx.SetStrokeStyle(gg.NewSolidPattern(green))
+
+		for _, d := range r.detectors {
+			left := float64(d.Objects[0].Rect.Left)
+			top := float64(d.Objects[0].Rect.Top)
+			width := float64(d.Objects[0].Rect.Width)
+			height := float64(d.Objects[0].Rect.Height)
+			imgCtx.DrawRectangle(left, top, width, height)
+		}
+
+		cleanedFilename := strings.ReplaceAll(filename, "/", "-")
+		frameFile := path.Join(outputDir, cleanedFilename+"-"+strconv.Itoa(r.frame)+".jpg")
 		f, err := os.Create(frameFile)
 		if err != nil {
-			log.Fatalf("Failed to create frame image: %v", err)
+			log.Printf("Failed to create file: %v\n", err)
+			continue
 		}
 		defer f.Close()
-		io.Copy(f, r.file)
+
+		err = jpeg.Encode(f, imgCtx.Image(), &jpeg.Options{Quality: 100})
+		if err != nil {
+			log.Printf("Unable to encode image: %v\n", err)
+			continue
+		}
 	}
 	if err := <-errc; err != nil {
 		switch err.(type) {
