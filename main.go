@@ -163,6 +163,7 @@ func main() {
 		green := color.RGBA{0, 100, 0, 255}
 		imgCtx.SetColor(color.Transparent)
 		imgCtx.SetStrokeStyle(gg.NewSolidPattern(green))
+		imgCtx.SetLineWidth(2)
 
 		for _, d := range r.detectors {
 			left := float64(d.Objects[0].Rect.Left)
