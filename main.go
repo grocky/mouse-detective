@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"log"
+	"strconv"
 	"sync"
 
 	"github.com/machinebox/sdk-go/objectbox"
@@ -13,6 +14,14 @@ import (
 type frame struct {
 	number int
 	buffer []byte
+}
+
+type endOfFile struct {
+	frames int
+}
+
+func (e *endOfFile) Error() string {
+	return "Video stream complete. frames: " + strconv.Itoa(e.frames)
 }
 
 func extractFrames(done <-chan struct{}, filename string) (<-chan frame, <-chan error) {
@@ -33,7 +42,7 @@ func extractFrames(done <-chan struct{}, filename string) (<-chan frame, <-chan 
 			n := 1
 			for {
 				if !video.Read(&frameMat) {
-					return errors.New("Unable to read frame")
+					return &endOfFile{n}
 				}
 				buf, err := gocv.IMEncode(gocv.JPEGFileExt, frameMat)
 				if err != nil {
@@ -129,9 +138,14 @@ func main() {
 			log.Printf("Frame result with an error: %v\n", r.err)
 			continue
 		}
-		log.Printf("Mouse detected! frame: %d, detectors: %v", r.frame, r.detectors)
+		log.Printf("Mouse detected! frame: %d, detectors: %v\n", r.frame, r.detectors)
 	}
 	if err := <-errc; err != nil {
-		log.Fatalf("Error detected: %v", err)
+		switch err.(type) {
+		case *endOfFile:
+			log.Printf("Finished processing video: %v\n", err)
+		default:
+			log.Fatalf("Error detected: %v\n", err)
+		}
 	}
 }
