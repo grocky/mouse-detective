@@ -7,7 +7,6 @@ import (
 	"image/jpeg"
 	"io"
 	"log"
-	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -175,16 +174,10 @@ func main() {
 
 		cleanedFilename := strings.ReplaceAll(filename, "/", "-")
 		frameFile := path.Join(outputDir, cleanedFilename+"-"+strconv.Itoa(r.frame)+".jpg")
-		f, err := os.Create(frameFile)
-		if err != nil {
-			log.Printf("Failed to create file: %v\n", err)
-			continue
-		}
-		defer f.Close()
 
-		err = jpeg.Encode(f, imgCtx.Image(), &jpeg.Options{Quality: 100})
+		err = gg.SaveJPG(frameFile, imgCtx.Image(), 100)
 		if err != nil {
-			log.Printf("Unable to encode image: %v\n", err)
+			log.Printf("Unable to create image: %v\n", err)
 			continue
 		}
 	}
