@@ -3,7 +3,9 @@ package main
 import (
 	"bytes"
 	"errors"
+	"io"
 	"log"
+	"os"
 	"strconv"
 	"sync"
 
@@ -65,6 +67,7 @@ type result struct {
 	frame int
 	// The detected bounds
 	detectors []objectbox.CheckDetectorResponse
+	file      io.Reader
 	err       error
 }
 
@@ -81,7 +84,11 @@ func checker(done <-chan struct{}, frames <-chan frame, results chan<- result) {
 		if f.number == 1 || f.number%10 == 0 {
 			log.Printf("Processing frame %d\n", f.number)
 		}
-		resp, err := objectClient.Check(bytes.NewReader(f.buffer))
+		// Set up a ReadWriter to hold the image sent to the model to write the file later.
+		var bufferRead bytes.Buffer
+		buffer := bytes.NewReader(f.buffer)
+		tee := io.TeeReader(buffer, &bufferRead)
+		resp, err := objectClient.Check(tee)
 		detectors := make([]objectbox.CheckDetectorResponse, 0, len(resp.Detectors))
 		// flatten detectors and identify found tags
 		for _, t := range resp.Detectors {
@@ -93,7 +100,7 @@ func checker(done <-chan struct{}, frames <-chan frame, results chan<- result) {
 			continue
 		}
 		select {
-		case results <- result{f.number, detectors, err}:
+		case results <- result{f.number, detectors, &bufferRead, err}:
 		case <-done:
 			return
 		}
@@ -139,6 +146,14 @@ func main() {
 			continue
 		}
 		log.Printf("Mouse detected! frame: %d, detectors: %v\n", r.frame, r.detectors)
+
+		frameFile := strconv.Itoa(r.frame) + ".jpg"
+		f, err := os.Create(frameFile)
+		if err != nil {
+			log.Fatalf("Failed to create frame image: %v", err)
+		}
+		defer f.Close()
+		io.Copy(f, r.file)
 	}
 	if err := <-errc; err != nil {
 		switch err.(type) {
