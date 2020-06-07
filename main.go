@@ -69,6 +69,9 @@ func checker(done <-chan struct{}, frames <-chan frame, results chan<- result) {
 
 	// process each frame from in channel
 	for f := range frames {
+		if f.number == 1 || f.number%10 == 0 {
+			log.Printf("Processing frame %d\n", f.number)
+		}
 		resp, err := objectClient.Check(bytes.NewReader(f.buffer))
 		detectors := make([]objectbox.CheckDetectorResponse, 0, len(resp.Detectors))
 		// flatten detectors and identify found tags
@@ -97,6 +100,7 @@ func main() {
 	defer close(done)
 
 	// Generate the channel of frames from the video file
+	log.Println("Start extracting frames")
 	frames, errc := extractFrames(done, filename)
 
 	// channel of frames with mice
@@ -106,6 +110,7 @@ func main() {
 	wg.Add(concurrency)
 
 	// Process the frames by fanning out to `concurrency` workers.
+	log.Println("Start processing frames")
 	for i := 0; i < concurrency; i++ {
 		go func() {
 			checker(done, frames, results)
