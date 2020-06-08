@@ -188,6 +188,7 @@ func main() {
 			width := float64(d.Objects[0].Rect.Width)
 			height := float64(d.Objects[0].Rect.Height)
 			imgCtx.DrawRectangle(left, top, width, height)
+			imgCtx.Stroke()
 		}
 
 		cleanedFilename := strings.ReplaceAll(filenameF, "/", "-")
