@@ -4,10 +4,12 @@ import (
 	"bytes"
 	"errors"
 	"flag"
+	"fmt"
 	"image/color"
 	"image/jpeg"
 	"io"
 	"log"
+	"os"
 	"path"
 	"strconv"
 	"strings"
@@ -18,6 +20,9 @@ import (
 
 	"gocv.io/x/gocv"
 )
+
+// Version is the version of the build
+var Version = "dev"
 
 type frame struct {
 	number int
@@ -116,12 +121,19 @@ func checker(done <-chan struct{}, frames <-chan frame, results chan<- result) {
 var filenameF string
 var outputDirF string
 var concurrencyF int
+var versionF bool
 
 func main() {
 	flag.StringVar(&filenameF, "filename", "", "the file to process")
 	flag.StringVar(&outputDirF, "outputDir", "rendered-frames", "the directory to place frames with detected objects")
 	flag.IntVar(&concurrencyF, "concurrency", 10, "the number of concurrent frames to check")
+	flag.BoolVar(&versionF, "v", false, "print the version")
 	flag.Parse()
+
+	if versionF {
+		fmt.Println(Version)
+		os.Exit(0)
+	}
 
 	// done channel for cancellation
 	done := make(chan struct{})
@@ -178,8 +190,8 @@ func main() {
 			imgCtx.DrawRectangle(left, top, width, height)
 		}
 
-		cleanedFilename := strings.ReplaceAll(filename, "/", "-")
-		frameFile := path.Join(outputDirF, cleanedFilename+"-"+strconv.Itoa(r.frame)+".jpg")
+		cleanedFilename := strings.ReplaceAll(filenameF, "/", "-")
+		frameFile := path.Join(outputDirF, Version+"-"+cleanedFilename+"-"+strconv.Itoa(r.frame)+".jpg")
 
 		err = gg.SaveJPG(frameFile, imgCtx.Image(), 100)
 		if err != nil {
