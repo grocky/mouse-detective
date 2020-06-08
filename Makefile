@@ -22,7 +22,7 @@ build: phony vet | $(BIN) ## build the binary
 	@go build \
 		-tags release \
 		-ldflags '-X main.Version=$(VERSION)' \
-		-o $(BIN)/$(PROJECT_NAME) main.go
+		-o $(BIN)/ ./...
 
 run: phony vet ## run the binary
 	@go run main.go
