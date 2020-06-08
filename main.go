@@ -135,6 +135,11 @@ func main() {
 		os.Exit(0)
 	}
 
+	if filenameF == "" {
+		fmt.Println("-filename is required")
+		os.Exit(1)
+	}
+
 	// done channel for cancellation
 	done := make(chan struct{})
 	defer close(done)
