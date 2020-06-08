@@ -1,4 +1,6 @@
-# Mouse Detector
+# Mouse Detective
+
+Training a model to detect mouse activity.
 
 ## Training data
 

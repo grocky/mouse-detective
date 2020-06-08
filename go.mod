@@ -1,4 +1,4 @@
-module github.com/grocky/mouse-detector
+module github.com/grocky/mouse-detective
 
 go 1.14
 
