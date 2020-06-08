@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"errors"
+	"flag"
 	"image/color"
 	"image/jpeg"
 	"io"
@@ -112,10 +113,15 @@ func checker(done <-chan struct{}, frames <-chan frame, results chan<- result) {
 	}
 }
 
-func main() {
+var filenameF string
+var outputDirF string
+var concurrencyF int
 
-	filename := "record/20200605/03/53.mp4" // TODO:grocky convert to flag
-	outputDir := "rendered-frames"          // TODO:grocky convert to flag
+func main() {
+	flag.StringVar(&filenameF, "filename", "", "the file to process")
+	flag.StringVar(&outputDirF, "outputDir", "rendered-frames", "the directory to place frames with detected objects")
+	flag.IntVar(&concurrencyF, "concurrency", 10, "the number of concurrent frames to check")
+	flag.Parse()
 
 	// done channel for cancellation
 	done := make(chan struct{})
@@ -123,17 +129,16 @@ func main() {
 
 	// Generate the channel of frames from the video file
 	log.Println("Start extracting frames")
-	frames, errc := extractFrames(done, filename)
+	frames, errc := extractFrames(done, filenameF)
 
 	// channel of frames with mice
 	results := make(chan result)
 	var wg sync.WaitGroup
-	const concurrency = 10 // TODO:grocky convert to flag
-	wg.Add(concurrency)
+	wg.Add(concurrencyF)
 
 	// Process the frames by fanning out to `concurrency` workers.
 	log.Println("Start processing frames")
-	for i := 0; i < concurrency; i++ {
+	for i := 0; i < concurrencyF; i++ {
 		go func() {
 			checker(done, frames, results)
 			wg.Done()
@@ -174,7 +179,7 @@ func main() {
 		}
 
 		cleanedFilename := strings.ReplaceAll(filename, "/", "-")
-		frameFile := path.Join(outputDir, cleanedFilename+"-"+strconv.Itoa(r.frame)+".jpg")
+		frameFile := path.Join(outputDirF, cleanedFilename+"-"+strconv.Itoa(r.frame)+".jpg")
 
 		err = gg.SaveJPG(frameFile, imgCtx.Image(), 100)
 		if err != nil {
