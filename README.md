@@ -1,5 +1,7 @@
 # Mouse Detective
 
+![](docs/mouse-detective.gif)
+
 Training a model to detect mouse activity.
 
 ## Training data
