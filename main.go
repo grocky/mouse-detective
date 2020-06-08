@@ -95,10 +95,10 @@ func processResults(results <-chan result) {
 		}
 
 		imgCtx := gg.NewContextForImage(image)
-		green := color.RGBA{0, 100, 0, 255}
+		green := color.RGBA{50, 205, 50, 255}
 		imgCtx.SetColor(color.Transparent)
 		imgCtx.SetStrokeStyle(gg.NewSolidPattern(green))
-		imgCtx.SetLineWidth(2)
+		imgCtx.SetLineWidth(1)
 
 		for _, d := range r.detectors {
 			left := float64(d.Objects[0].Rect.Left)
