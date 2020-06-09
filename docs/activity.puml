@@ -1,0 +1,47 @@
+@startuml
+skinparam dpi 300
+skinparam shadowing false
+hide footbox
+
+skinparam file {
+	BackgroundColor #6A9EFF
+	BorderColor #444444
+}
+skinparam rectangle {
+	BackgroundColor #6A9EFF
+	BorderColor #444444
+}
+skinparam cloud {
+	BackgroundColor #FFFFFF
+}
+skinparam Arrowcolor #444444
+skinparam note {
+	BackgroundColor #FFFFFF
+	BorderColor #444444
+}
+
+file v as "video"
+rectangle ex as "exractor"
+queue fc as "frame channel" {
+	collections f
+}
+collections c as "checker"
+cloud ob as "object box"
+queue results as "results channel" {
+	collections r
+}
+rectangle resp as "results processor"
+file frame
+
+note left of c
+	N checkers defined by concurrency
+end note
+
+ex --> v: extract frame bytes
+ex -up-> f: encoded as JPEG
+c -up-> f: pull frame
+c .down.> ob: check frame for mouse
+c -up-> r: add detected frames to channel
+resp -up-> r: pull result
+resp --> frame: generate frame\nwith highlighted mouse
+@enduml

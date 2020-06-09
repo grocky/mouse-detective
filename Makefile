@@ -35,3 +35,10 @@ RESET  := $(shell tput -Txterm sgr0)
 
 help: phony ## print this help message
 	@awk -F ':|##' '/^[^\t].+?:.*?##/ { printf "${GREEN}%-20s${RESET}%s\n", $$1, $$NF }' $(MAKEFILE_LIST)
+
+PUML_FILES = $(shell find . -name "*.puml")
+DIAGRAMS = $(PUML_FILES:%.puml=%.png)
+
+doc-images: $(DIAGRAMS) ## Render plantuml diagrams
+%.png: $(PUML_FILES)
+	plantuml -tpng $^
